@@ -1,0 +1,132 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    char pin[10];
+    float balance;
+} User;
+
+// Function prototypes
+int login(User *u);
+void menu(User *u);
+void checkBalance(User *u);
+void deposit(User *u);
+void withdraw(User *u);
+void changePin(User *u);
+void saveToFile(User *u);
+void loadFromFile(User *u);
+
+int main() {
+    User user;
+    loadFromFile(&user);
+
+    printf("\n===== ATM Simulation System =====\n");
+
+    if (login(&user)) {
+        menu(&user);
+    } else {
+        printf("Invalid PIN! Exiting...\n");
+    }
+
+    return 0;
+}
+
+// Load user details from file
+void loadFromFile(User *u) {
+    FILE *fp = fopen("user.txt", "r");
+    if (fp == NULL) {
+        // If file doesn't exist, create default user
+        strcpy(u->pin, "1234");
+        u->balance = 1000.0;
+        saveToFile(u);
+        return;
+    }
+    fscanf(fp, "%s %f", u->pin, &u->balance);
+    fclose(fp);
+}
+
+// Save user details to file
+void saveToFile(User *u) {
+    FILE *fp = fopen("user.txt", "w");
+    if (!fp) {
+        printf("Error saving file!\n");
+        return;
+    }
+    fprintf(fp, "%s %.2f", u->pin, u->balance);
+    fclose(fp);
+}
+
+// Login with PIN
+int login(User *u) {
+    char enteredPin[10];
+    printf("Enter PIN: ");
+    scanf("%s", enteredPin);
+
+    if (strcmp(enteredPin, u->pin) == 0) {
+        return 1; // success
+    }
+    return 0; // failure
+}
+
+// ATM Menu
+void menu(User *u) {
+    int choice;
+    while (1) {
+        printf("\n===== ATM Menu =====\n");
+        printf("1. Check Balance\n");
+        printf("2. Deposit\n");
+        printf("3. Withdraw\n");
+        printf("4. Change PIN\n");
+        printf("5. Save to File\n");
+        printf("6. Exit\n");
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1: checkBalance(u); break;
+            case 2: deposit(u); break;
+            case 3: withdraw(u); break;
+            case 4: changePin(u); break;
+            case 5: saveToFile(u); printf("Data saved successfully!\n"); break;
+            case 6: saveToFile(u); printf("Thank you! Goodbye.\n"); exit(0);
+            default: printf("Invalid choice!\n");
+        }
+    }
+}
+
+void checkBalance(User *u) {
+    printf("Your current balance: Rs. %.2f\n", u->balance);
+}
+
+void deposit(User *u) {
+    float amount;
+    printf("Enter deposit amount: ");
+    scanf("%f", &amount);
+    if (amount > 0) {
+        u->balance += amount;
+        printf("Deposit successful! New balance: Rs. %.2f\n", u->balance);
+    } else {
+        printf("Invalid amount!\n");
+    }
+}
+
+void withdraw(User *u) {
+    float amount;
+    printf("Enter withdrawal amount: ");
+    scanf("%f", &amount);
+    if (amount > 0 && amount <= u->balance) {
+        u->balance -= amount;
+        printf("Withdrawal successful! New balance: Rs. %.2f\n", u->balance);
+    } else {
+        printf("Insufficient balance or invalid amount!\n");
+    }
+}
+
+void changePin(User *u) {
+    char newPin[10];
+    printf("Enter new PIN: ");
+    scanf("%s", newPin);
+    strcpy(u->pin, newPin);
+    printf("PIN changed successfully!\n");
+}
